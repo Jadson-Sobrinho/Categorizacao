@@ -26,5 +26,14 @@ function extractBrand(text) {
     const words = text.split(' ');
     return words.length > 2 ? words[words.length - 2] : null;
   }
+
+
+
+//extrair o tipo do porduto: integral', 'desnatado', 'sem lactose', 'zero', 'light
+function extractType(text) {
+    return wordsToDiference.find(word => text.includes(word)) || null;
+}
+  
+  
   
   
