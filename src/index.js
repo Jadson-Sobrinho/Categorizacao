@@ -2,7 +2,11 @@ const fs = require('fs');
 const stringSimilarity = require('string-similarity');
 
 
-const wordsToDiference = ['integral', 'desnatado', 'sem lactose', 'zero', 'light'];
+const TypeToDiference = ['integral', 'desnatado', 'semi desnatado', 'zero', 'light'];
+
+const BrandToDiference = ['piracanjuba', 'italac, parmalat', 'tio joão', 'camil', 'scala', 'tirolez', 'del valle', 'natural one', 'maguary', 'aurora', 'casa de madeira'];
+
+const NameToDiference = ['leite', 'arroz']; 
 
 
 function normalizeText(text) {
@@ -15,7 +19,7 @@ function normalizeText(text) {
 
 
 function extractSize(text) {
-  const regex = /(\d+(\.\d+)?\s?(kg|g|l|ml))/i; //verificar se tem pacotes e mg
+  const regex = /(\d+(\.\d+)?\s?(kg|g|L|ml))/i; //verificar se tem pacotes e mg
   const match = text.match(regex);
   return match ? match[0] : null;
 }
@@ -24,14 +28,20 @@ function extractSize(text) {
 //extrair marca do produto
 function extractBrand(text) {
     const words = text.split(' ');
-    return words.length > 2 ? words[words.length - 2] : null;
+    
+    for (let brand of BrandToDiference) {
+      if (words.includes(brand)) {
+        return brand;
+      }
+    }
+    return console.log("Marca não registrada")
   }
 
 
 
 //extrair o tipo do porduto: integral', 'desnatado', 'sem lactose', 'zero', 'light
 function extractType(text) {
-    return wordsToDiference.find(word => text.includes(word)) || null;
+    return TypeToDiference.find(word => text.includes(word)) || null;
 }
   
 
@@ -73,9 +83,11 @@ function groupProducts(product, threshold = 0.8) {
         *
         */
 
-        if (actualType !== comparedType) continue;
-        if (actualBrand !== comparedBrand) continue;
-        if (actualSize !== comparedSize) continue;
+        if ((actualType && comparedType && actualType !== comparedType) ||
+            (actualBrand && comparedBrand && actualBrand !== comparedBrand) ||
+            (actualSize && comparedSize && actualSize !== comparedSize)) {
+          continue;
+        }
         
         
         if (similarity >= threshold) {
