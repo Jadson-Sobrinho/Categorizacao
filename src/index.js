@@ -34,6 +34,58 @@ function extractType(text) {
     return wordsToDiference.find(word => text.includes(word)) || null;
 }
   
+
+
+//agrupar produtos semelhantes
+function groupProducts(product, threshold = 0.8) {
+    let groups = [];
+    let processed = new Set();
   
+    for (let i = 0; i < product.length; i++) {
+      if (processed.has(i)) continue;
   
+      let actualProduct = product[i];
+      let normalizedName = normalizeText(actualProduct.title);
+      let actualSize = extractSize(normalizedName);
+      let actualBrand = extractBrand(normalizedName);
+      let actualType = extractType(normalizedName);
   
+      let group = [actualProduct];
+      processed.add(i);
+  
+      for (let j = i + 1; j < product.length; j++) {
+        if (processed.has(j)) continue;
+  
+        let comparedName = normalizeText(product[j].title);
+        let comparedSize = extractSize(comparedName);
+        let comparedBrand = extractBrand(comparedName);
+        let comparedType = extractType(comparedName);
+  
+        let similarity = stringSimilarity.compareTwoStrings(normalizedName, comparedName);
+  
+
+
+        /* Regras de comparação
+        *
+        * Tipos diferentes (integral vs. desnatado).
+        * Marcas diferentes (Italac vs. Piracanjuba).
+        * Tamanhos/quantidades diferentes (1L vs. 2L).
+        *
+        */
+
+        if (actualType !== comparedType) continue;
+        if (actualBrand !== comparedBrand) continue;
+        if (actualSize !== comparedSize) continue;
+        
+        
+        if (similarity >= threshold) {
+          group.push(product[j]);
+          processed.add(j);
+        }
+      }
+  
+      groups.push(group);
+    }
+  
+    return groups;
+  }

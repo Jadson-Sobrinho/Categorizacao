@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "categorizacao": "file:",
     "string-similarity": "^4.0.4"
   }
 }
