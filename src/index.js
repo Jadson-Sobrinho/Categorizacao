@@ -89,3 +89,44 @@ function groupProducts(product, threshold = 0.8) {
   
     return groups;
   }
+
+
+  // Função para categorizar e agrupar os produtos
+  function categorizeProduct(data) {
+    let result = [];
+  
+    // Agrupando os produtos por categoria
+    let categories = groupProducts(data);
+  
+    categories.forEach(group => {
+      let category = group[0].title;
+      result.push({
+        category: category,
+        count: group.length,
+        products: group.map(product => ({
+          title: product.title,
+          supermarket: product.supermarket
+        }))
+      });
+    });
+  
+    return result;
+  }
+  
+  // Ler o arquivo JSON e processar os dados
+  fs.readFile('data01.json', 'utf8', (err, data) => {
+    if (err) {
+      console.error('Erro ao ler o arquivo:', err);
+      return;
+    }
+  
+    try {
+      const jsonData = JSON.parse(data);
+      const resultado = categorizeProduct(jsonData);
+      console.log(JSON.stringify(resultado, null, 2));
+    } catch (error) {
+      console.error('Erro ao processar JSON:', error);
+    }
+  });
+  
+  
