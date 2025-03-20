@@ -19,3 +19,12 @@ function extractSize(text) {
   const match = text.match(regex);
   return match ? match[0] : null;
 }
+
+
+//extrair marca do produto
+function extractBrand(text) {
+    const words = text.split(' ');
+    return words.length > 2 ? words[words.length - 2] : null;
+  }
+  
+  
