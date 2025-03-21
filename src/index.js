@@ -12,17 +12,38 @@ function normalizeText(text) {
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Substituir sinônimos antes de processar tamanho
-  for (const [mainType, synonyms] of Object.entries(TypeSynonyms)) {
-    const pattern = new RegExp(`\\b(${synonyms.join('|').replace(/ /g, '\\s+')})\\b`, 'gi');
-    normalized = normalized.replace(pattern, mainType);
+// Itera sobre cada tipo principal e seus sinônimos
+for (const mainType in TypeSynonyms) {
+  if (TypeSynonyms.hasOwnProperty(mainType)) {
+    // Obtém a lista de sinônimos para o tipo principal
+    const synonyms = TypeSynonyms[mainType];
+
+    // Cria uma expressão regular para encontrar os sinônimos
+    const synonymPattern = synonyms
+      .map(s => s.replace(/ /g, '\\s+')) // Substitui espaços por \s+
+      .join('|'); // Junta os sinônimos com "|" para o regex
+
+    const regex = new RegExp(`\\b(${synonymPattern})\\b`, 'gi');
+
+    // Substitui os sinônimos pelo tipo principal na string normalizada
+    normalized = normalized.replace(regex, mainType);
   }
+}
 
   // Processamento de tamanho
   const size = extractSize(normalized);
   if (size) {
-    const formattedValue = size.value % 1 === 0 ? size.value.toString() : size.value.toFixed(3);
-    normalized = normalized.replace(/(\d+[,.]?\d*)\s?(l|ml|kg|g)/i, `${formattedValue}${size.unit}`);
+    // Verifica se o valor do tamanho é um número inteiro
+    const isInteger = size.value % 1 === 0;
+  
+    // Formata o valor: inteiro como string ou decimal com 3 casas
+    const formattedValue = isInteger ? size.value.toString() : size.value.toFixed(3);
+  
+    // Cria o padrão regex para encontrar o valor e a unidade
+    const pattern = /(\d+[,.]?\d*)\s?(l|ml|kg|g)/i;
+  
+    // Substitui o valor e a unidade encontrados pelo valor formatado e a unidade do objeto `size`
+    normalized = normalized.replace(pattern, `${formattedValue}${size.unit}`);
   }
 
   return normalized.split(' ').sort().join(' ');
@@ -70,10 +91,16 @@ function extractSize(text) {
 }
 
 function extractType(text) {
-  // Usar texto já normalizado com sinônimos substituídos
-  return TypeToDiference.find(type => 
-    text.includes(type)
-  ) || null;
+
+  for (const type of TypeToDiference) {
+    // Verifica se o texto inclui o tipo atual
+    if (text.includes(type)) {
+      // Retorna o tipo encontrado
+      return type;
+    }
+  }
+
+  return null;
 }
 
 function groupProducts(products, threshold = 0.85) {
@@ -81,8 +108,17 @@ function groupProducts(products, threshold = 0.85) {
   const processed = new Set();
 
   const isSameSize = (size1, size2) => {
-    if (!size1 || !size2) return true; // Considerar ambos sem tamanho como iguais
-    return size1.value === size2.value && size1.unit === size2.unit;
+    // Se um dos tamanhos for nulo ou indefinido, considerar como iguais
+    if (!size1 || !size2) {
+      return true;
+    }
+  
+    // Comparar os valores e as unidades dos dois tamanhos
+    const isValueEqual = size1.value === size2.value;
+    const isUnitEqual = size1.unit === size2.unit;
+  
+    // Retornar true apenas se ambos, valor e unidade, forem iguais
+    return isValueEqual && isUnitEqual;
   };
 
   for (let i = 0; i < products.length; i++) {
@@ -103,10 +139,8 @@ function groupProducts(products, threshold = 0.85) {
       const compareSize = extractSize(compareNorm);
 
 
-      if (
-        extractType(currentNorm) !== extractType(compareNorm) ||
-        !isSameSize(currentSize, compareSize)
-      ) {
+      if (extractType(currentNorm) !== extractType(compareNorm) || !isSameSize(currentSize, compareSize)) 
+      {
         continue;
       }
 
